@@ -53,9 +53,41 @@ def process_images_in_folder(input_folder, output_folder):
     for image_file in image_files:
         process_image(os.path.join(input_folder, image_file), output_folder)
 
+def process_live_camera():
+    """ Activate webcam and perform real-time hand keypoint detection. """
+    cap = cv2.VideoCapture(0)
 
-# Just to test
+    with mp_hands.Hands(static_image_mode=False, max_num_hands=2, min_detection_confidence=0.5) as hands:
+        while cap.isOpened():
+            success, frame = cap.read()
+            if not success:
+                print("Ignoring empty frame.")
+                continue
+
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            results = hands.process(frame_rgb)
+
+            if results.multi_hand_landmarks:
+                for hand_landmarks in results.multi_hand_landmarks:
+                    mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
+
+            cv2.imshow("Hand Tracking - Press 'q' to Exit", frame)
+
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+
+    cap.release()
+    cv2.destroyAllWindows()
+
+
 if __name__ == "__main__":
-    input_folder = "/Users/denys.koval/University/VirtualRingTryOn/data/images"
-    output_folder = "/Users/denys.koval/University/VirtualRingTryOn/data/results"
-    process_images_in_folder(input_folder, output_folder)
+    mode = input("Choose mode: 'batch' for image processing, 'live' for real-time webcam tracking: ").strip().lower()
+
+    if mode == "batch":
+        input_folder = "/Users/denys.koval/University/VirtualRingTryOn/data/images"
+        output_folder = "/Users/denys.koval/University/VirtualRingTryOn/data/results"
+        process_images_in_folder(input_folder, output_folder)
+    elif mode == "live":
+        process_live_camera()
+    else:
+        print("Invalid mode! Choose 'batch' or 'live'.")
