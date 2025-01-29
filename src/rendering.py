@@ -1,6 +1,5 @@
 import numpy as np
 import cv2
-import json
 import os
 import trimesh
 import pyrender
@@ -12,12 +11,6 @@ def load_ring_model(model_path):
         return mesh
     else:
         raise ValueError("Unsupported model format. Use .obj or .glb")
-
-def load_hand_pose(json_path):
-    """ Load hand pose landmarks from a JSON file """
-    with open(json_path, 'r') as f:
-        data = json.load(f)
-    return np.array(data[0], dtype=np.float32)
 
 def transform_ring_to_hand(ring_model, rvec, tvec):
     """ Apply transformation to align ring model with estimated hand pose """
@@ -59,14 +52,12 @@ def render_scene(image_path, ring_model, camera_intrinsics):
     cv2.destroyAllWindows()
     print(f"Final rendered image saved to: {output_path}")
 
-def process_ring_render(image_path, json_path, model_path, camera_intrinsics):
+def process_ring_render(image_path, model_path, camera_intrinsics):
     """ Full pipeline to load ring model, transform it, and render it on the hand """
-    landmarks = load_hand_pose(json_path)
-
     ring_model = load_ring_model(model_path)
 
-    rvec = np.array([[0.1], [-0.2], [0.3]])
-    tvec = np.array([[0], [0], [50]])
+    rvec = np.array([[-6.16847423],  [0.8472882], [-0.31288158]])
+    tvec = np.array([[-50039.15991001], [-37508.219145], [76317.43019042]])
 
     transformed_ring = transform_ring_to_hand(ring_model, rvec, tvec)
 
@@ -74,9 +65,8 @@ def process_ring_render(image_path, json_path, model_path, camera_intrinsics):
 
 
 if __name__ == "__main__":
-    image_path = "data/images/original_0.png"
-    json_path = "data/results/original_0_landmarks.json"
-    model_path = "ring/ring.obj"
+    image_path = "/Users/denys.koval/University/VirtualRingTryOn/data/images/original_0.png"
+    model_path = "/Users/denys.koval/University/VirtualRingTryOn/data/models/ring/ring.obj"
     camera_intrinsics = [1464, 1464, 960, 720]  # fx, fy, cx, cy
 
-    process_ring_render(image_path, json_path, model_path, camera_intrinsics)
+    process_ring_render(image_path, model_path, camera_intrinsics)
