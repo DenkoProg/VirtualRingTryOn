@@ -13,7 +13,7 @@ def load_depth_from_log(log_path, target_size):
 
     depth_matrix = cv2.resize(depth_matrix, target_size, interpolation=cv2.INTER_NEAREST)
 
-    return depth_matrix / 1000.0  # Convert mm to meters
+    return depth_matrix * 1000.0  # Convert mm to meters
 
 def load_rgbd_data(rgb_path, depth_log_path, landmarks_path):
     rgb_image = cv2.imread(rgb_path)

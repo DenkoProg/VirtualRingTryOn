@@ -12,20 +12,23 @@ def project_3d_to_2d(point_3d, camera_intrinsics):
     return x_2d, y_2d
 
 def render_ring_on_image(ring_model_path, transformation_matrix, rgb_path, camera_intrinsics):
-    """Loads the ring model, transforms it, projects it onto the 2D image, and overlays it."""
     rgb_image = cv2.imread(rgb_path)
     if rgb_image is None:
         raise FileNotFoundError(f"Error: Could not load RGB image at {rgb_path}")
 
     ring_model = o3d.io.read_triangle_mesh(ring_model_path)
+
+    ring_model.scale(1, center=ring_model.get_center())
+
+    R_correction = o3d.geometry.get_rotation_matrix_from_axis_angle([np.pi / 2, 0, 0])
+    ring_model.rotate(R_correction, center=ring_model.get_center())
+
     ring_model.transform(transformation_matrix)
 
     vertices = np.asarray(ring_model.vertices)
-
     projected_points = [project_3d_to_2d(v, camera_intrinsics) for v in vertices]
 
     ring_mask = np.zeros_like(rgb_image, dtype=np.uint8)
-
     for point in projected_points:
         if 0 <= point[0] < rgb_image.shape[1] and 0 <= point[1] < rgb_image.shape[0]:
             cv2.circle(ring_mask, point, radius=2, color=(0, 255, 0), thickness=-1)
@@ -37,10 +40,10 @@ def render_ring_on_image(ring_model_path, transformation_matrix, rgb_path, camer
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    rgb_path = "/Users/denys.koval/University/VirtualRingTryOn/data/images/original_0.png"
-    depth_log_path = "/Users/denys.koval/University/VirtualRingTryOn/data/images/depth_logs_0.txt"
-    landmarks_path = "/Users/denys.koval/University/VirtualRingTryOn/data/results/original_0_landmarks.json"
-    ring_model_path = "/Users/denys.koval/University/VirtualRingTryOn/data/models/ring/ring.obj"
+    rgb_path = "/Users/denys.koval/University/VirtualRingTryOn/data/images/original_2.png"
+    depth_log_path = "/Users/denys.koval/University/VirtualRingTryOn/data/images/depth_logs_2.txt"
+    landmarks_path = "/Users/denys.koval/University/VirtualRingTryOn/data/results/original_2_landmarks.json"
+    ring_model_path = "/Users/denys.koval/University/VirtualRingTryOn/data/models/ring/ring.glb"
 
     camera_intrinsics = np.array([[1464, 0, 960],
                                   [0, 1464, 720],
