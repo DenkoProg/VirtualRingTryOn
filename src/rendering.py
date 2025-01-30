@@ -12,6 +12,24 @@ def project_3d_to_2d(point_3d, camera_intrinsics):
     y_2d = int((y * fy / z) + cy)
     return x_2d, y_2d
 
+
+def compute_depth_offset(vertices, camera_intrinsics, depth_map):
+    errors = []
+
+    for point_3d in vertices:
+        x_2d, y_2d = project_3d_to_2d(point_3d, camera_intrinsics)
+
+        if 0 <= x_2d < depth_map.shape[1] and 0 <= y_2d < depth_map.shape[0]:
+            Z_ring = point_3d[2]
+            Z_depthmap = depth_map[y_2d, x_2d]
+            error = Z_ring - Z_depthmap
+            errors.append(error)
+
+    if errors:
+        return np.mean(errors)
+    return 0
+
+
 def render_ring_on_image(ring_model_path, transformation_matrix, rgb_path, camera_intrinsics, depth_map):
     img = cv2.imread(rgb_path)
     ring = o3d.io.read_triangle_mesh(ring_model_path)
@@ -23,6 +41,7 @@ def render_ring_on_image(ring_model_path, transformation_matrix, rgb_path, camer
     triangles = np.asarray(ring.triangles)
 
     overlay = np.zeros_like(img, dtype=np.uint8)
+    depth_offset = compute_depth_offset(vertices, camera_intrinsics, depth_map)
 
     for tri in triangles:
         pts_2d = []
@@ -30,10 +49,9 @@ def render_ring_on_image(ring_model_path, transformation_matrix, rgb_path, camer
             point_3d = vertices[idx]
             x_2d, y_2d = project_3d_to_2d(point_3d, camera_intrinsics)
 
-            # # In order to hide the ring behind the hand
-            # if point_3d[2] > (depth_map[y_2d, x_2d]):
-            #     pts_2d = []
-            #     break
+            if point_3d[2] > depth_map[y_2d, x_2d] + depth_offset:
+                pts_2d = []
+                break
 
             pts_2d.append((x_2d, y_2d))
 
@@ -47,9 +65,9 @@ def render_ring_on_image(ring_model_path, transformation_matrix, rgb_path, camer
 
 
 if __name__ == "__main__":
-    rgb_path = "/Users/denys.koval/University/VirtualRingTryOn/data/images/original_1.png"
-    depth_log_path = "/Users/denys.koval/University/VirtualRingTryOn/data/images/depth_logs_1.txt"
-    landmarks_path = "/Users/denys.koval/University/VirtualRingTryOn/data/results/original_1_landmarks.json"
+    rgb_path = "/Users/denys.koval/University/VirtualRingTryOn/data/images/original_0.png"
+    depth_log_path = "/Users/denys.koval/University/VirtualRingTryOn/data/images/depth_logs_0.txt"
+    landmarks_path = "/Users/denys.koval/University/VirtualRingTryOn/data/results/original_0_landmarks.json"
     ring_model_path = "/Users/denys.koval/University/VirtualRingTryOn/data/models/ring/ring.glb"
 
     intrinsics = np.array([[1464, 0, 960],
