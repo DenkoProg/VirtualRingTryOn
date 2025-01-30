@@ -1,7 +1,8 @@
 import open3d as o3d
 import numpy as np
 import cv2
-from pose_estimation import get_transformation_matrix
+from pose_estimation import get_transformation_matrix, load_depth_from_log
+
 
 def project_3d_to_2d(point_3d, camera_intrinsics):
     """Projects a 3D point onto a 2D image using intrinsic parameters."""
@@ -11,7 +12,7 @@ def project_3d_to_2d(point_3d, camera_intrinsics):
     y_2d = int((y * fy / z) + cy)
     return x_2d, y_2d
 
-def render_ring_on_image(ring_model_path, transformation_matrix, rgb_path, camera_intrinsics):
+def render_ring_on_image(ring_model_path, transformation_matrix, rgb_path, camera_intrinsics, depth_map):
     img = cv2.imread(rgb_path)
     ring = o3d.io.read_triangle_mesh(ring_model_path)
     ring.scale(1, center=ring.get_center())
@@ -22,22 +23,28 @@ def render_ring_on_image(ring_model_path, transformation_matrix, rgb_path, camer
     triangles = np.asarray(ring.triangles)
 
     overlay = np.zeros_like(img, dtype=np.uint8)
+
     for tri in triangles:
         pts_2d = []
         for idx in tri:
-            projected = project_3d_to_2d(vertices[idx], camera_intrinsics)
-            if projected is None:
-                pts_2d = []
-                break
-            pts_2d.append(projected)
+            point_3d = vertices[idx]
+            x_2d, y_2d = project_3d_to_2d(point_3d, camera_intrinsics)
+
+            # # In order to hide the ring behind the hand
+            # if point_3d[2] > (depth_map[y_2d, x_2d]):
+            #     pts_2d = []
+            #     break
+
+            pts_2d.append((x_2d, y_2d))
+
         if len(pts_2d) == 3:
-            pts_2d = np.array(pts_2d, dtype=np.int32)
-            cv2.fillConvexPoly(overlay, pts_2d, (0, 255, 255))
+            cv2.fillConvexPoly(overlay, np.array(pts_2d, dtype=np.int32), (0, 255, 255))
 
     blended = cv2.addWeighted(img, 1.0, overlay, 1, 0)
     cv2.imshow("Rendered Ring", blended)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+
 
 if __name__ == "__main__":
     rgb_path = "/Users/denys.koval/University/VirtualRingTryOn/data/images/original_1.png"
@@ -49,6 +56,8 @@ if __name__ == "__main__":
                            [0, 1464, 720],
                            [0, 0, 1]], dtype=np.float32)
 
+    image = cv2.imread(rgb_path)
+    depth_map = load_depth_from_log(depth_log_path, (image.shape[0], image.shape[1]))
     matrix = get_transformation_matrix(rgb_path, depth_log_path, landmarks_path, intrinsics)
     if matrix is not None:
-        render_ring_on_image(ring_model_path, matrix, rgb_path, intrinsics)
+        render_ring_on_image(ring_model_path, matrix, rgb_path, intrinsics, depth_map)
