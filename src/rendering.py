@@ -12,44 +12,43 @@ def project_3d_to_2d(point_3d, camera_intrinsics):
     return x_2d, y_2d
 
 def render_ring_on_image(ring_model_path, transformation_matrix, rgb_path, camera_intrinsics):
-    rgb_image = cv2.imread(rgb_path)
-    if rgb_image is None:
-        raise FileNotFoundError(f"Error: Could not load RGB image at {rgb_path}")
+    img = cv2.imread(rgb_path)
+    ring = o3d.io.read_triangle_mesh(ring_model_path)
+    ring.scale(1, center=ring.get_center())
+    ring.rotate(o3d.geometry.get_rotation_matrix_from_axis_angle([np.pi / 2, 0, 0]), center=ring.get_center())
+    ring.transform(transformation_matrix)
 
-    ring_model = o3d.io.read_triangle_mesh(ring_model_path)
+    vertices = np.asarray(ring.vertices)
+    triangles = np.asarray(ring.triangles)
 
-    ring_model.scale(1, center=ring_model.get_center())
+    overlay = np.zeros_like(img, dtype=np.uint8)
+    for tri in triangles:
+        pts_2d = []
+        for idx in tri:
+            projected = project_3d_to_2d(vertices[idx], camera_intrinsics)
+            if projected is None:
+                pts_2d = []
+                break
+            pts_2d.append(projected)
+        if len(pts_2d) == 3:
+            pts_2d = np.array(pts_2d, dtype=np.int32)
+            cv2.fillConvexPoly(overlay, pts_2d, (0, 255, 255))
 
-    R_correction = o3d.geometry.get_rotation_matrix_from_axis_angle([np.pi / 2, 0, 0])
-    ring_model.rotate(R_correction, center=ring_model.get_center())
-
-    ring_model.transform(transformation_matrix)
-
-    vertices = np.asarray(ring_model.vertices)
-    projected_points = [project_3d_to_2d(v, camera_intrinsics) for v in vertices]
-
-    ring_mask = np.zeros_like(rgb_image, dtype=np.uint8)
-    for point in projected_points:
-        if 0 <= point[0] < rgb_image.shape[1] and 0 <= point[1] < rgb_image.shape[0]:
-            cv2.circle(ring_mask, point, radius=2, color=(0, 255, 0), thickness=-1)
-
-    blended_image = cv2.addWeighted(rgb_image, 1.0, ring_mask, 0.8, 0)
-
-    cv2.imshow("Rendered Ring", blended_image)
+    blended = cv2.addWeighted(img, 1.0, overlay, 1, 0)
+    cv2.imshow("Rendered Ring", blended)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    rgb_path = "/Users/denys.koval/University/VirtualRingTryOn/data/images/original_2.png"
-    depth_log_path = "/Users/denys.koval/University/VirtualRingTryOn/data/images/depth_logs_2.txt"
-    landmarks_path = "/Users/denys.koval/University/VirtualRingTryOn/data/results/original_2_landmarks.json"
+    rgb_path = "/Users/denys.koval/University/VirtualRingTryOn/data/images/original_1.png"
+    depth_log_path = "/Users/denys.koval/University/VirtualRingTryOn/data/images/depth_logs_1.txt"
+    landmarks_path = "/Users/denys.koval/University/VirtualRingTryOn/data/results/original_1_landmarks.json"
     ring_model_path = "/Users/denys.koval/University/VirtualRingTryOn/data/models/ring/ring.glb"
 
-    camera_intrinsics = np.array([[1464, 0, 960],
-                                  [0, 1464, 720],
-                                  [0, 0, 1]], dtype=np.float32)
+    intrinsics = np.array([[1464, 0, 960],
+                           [0, 1464, 720],
+                           [0, 0, 1]], dtype=np.float32)
 
-    transformation_matrix = get_transformation_matrix(rgb_path, depth_log_path, landmarks_path, camera_intrinsics)
-
-    if transformation_matrix is not None:
-        render_ring_on_image(ring_model_path, transformation_matrix, rgb_path, camera_intrinsics)
+    matrix = get_transformation_matrix(rgb_path, depth_log_path, landmarks_path, intrinsics)
+    if matrix is not None:
+        render_ring_on_image(ring_model_path, matrix, rgb_path, intrinsics)
