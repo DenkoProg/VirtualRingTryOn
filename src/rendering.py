@@ -65,9 +65,9 @@ def render_ring_on_image(ring_model_path, transformation_matrix, rgb_path, camer
 
 
 if __name__ == "__main__":
-    rgb_path = "/Users/denys.koval/University/VirtualRingTryOn/data/images/original_0.png"
-    depth_log_path = "/Users/denys.koval/University/VirtualRingTryOn/data/images/depth_logs_0.txt"
-    landmarks_path = "/Users/denys.koval/University/VirtualRingTryOn/data/results/original_0_landmarks.json"
+    rgb_path = "/Users/denys.koval/University/VirtualRingTryOn/data/images/original_1.png"
+    depth_log_path = "/Users/denys.koval/University/VirtualRingTryOn/data/images/depth_logs_1.txt"
+    landmarks_path = "/Users/denys.koval/University/VirtualRingTryOn/data/results/original_1_landmarks.json"
     ring_model_path = "/Users/denys.koval/University/VirtualRingTryOn/data/models/ring/ring.glb"
 
     intrinsics = np.array([[1464, 0, 960],

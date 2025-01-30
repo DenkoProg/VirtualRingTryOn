@@ -10,7 +10,8 @@ mp_drawing = mp.solutions.drawing_utils
 def process_image(image_path, output_dir):
     """ Process a single image to detect hand keypoints and save annotated results. """
 
-    os.makedirs(output_dir, exist_ok=True)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir, exist_ok=True)
 
     image = cv2.imread(image_path)
     if image is None:
@@ -33,9 +34,17 @@ def process_image(image_path, output_dir):
 
             image_filename = os.path.basename(image_path)
             annotated_image_path = os.path.join(output_dir, f"annotated_{image_filename}")
+
+            if os.path.exists(annotated_image_path):
+                os.remove(annotated_image_path)
+
             cv2.imwrite(annotated_image_path, annotated_image)
 
             landmarks_path = os.path.join(output_dir, f"{image_filename.split('.')[0]}_landmarks.json")
+
+            if os.path.exists(landmarks_path):
+                os.remove(landmarks_path)
+
             with open(landmarks_path, 'w') as f:
                 json.dump(landmarks, f, indent=4)
 
