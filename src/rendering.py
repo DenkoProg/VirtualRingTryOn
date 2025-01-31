@@ -34,7 +34,6 @@ def render_ring_on_image(ring_model_path, transformation_matrix, rgb_path, camer
     img = cv2.imread(rgb_path)
     ring = o3d.io.read_triangle_mesh(ring_model_path)
     ring.scale(1, center=ring.get_center())
-    ring.rotate(o3d.geometry.get_rotation_matrix_from_axis_angle([np.pi / 2, 0, 0]), center=ring.get_center())
     ring.transform(transformation_matrix)
 
     vertices = np.asarray(ring.vertices)

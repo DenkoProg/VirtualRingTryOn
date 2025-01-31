@@ -71,9 +71,9 @@ def compute_ring_transformation(hand_3d_points):
     y_axis = np.cross(z_axis, x_axis)
 
     transformation_matrix = np.eye(4)
-    transformation_matrix[:3, 0] = y_axis
-    transformation_matrix[:3, 1] = z_axis
-    transformation_matrix[:3, 2] = x_axis
+    transformation_matrix[:3, 0] = z_axis
+    transformation_matrix[:3, 1] = x_axis
+    transformation_matrix[:3, 2] = y_axis
     transformation_matrix[:3, 3] = ring_center
 
     return transformation_matrix
