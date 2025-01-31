@@ -81,44 +81,33 @@ def save_results(input_folder_path, output_path, n):
 
 
 def create_video_from_images(folder_path, output_path, fps=30.0):
-    # Get the list of all image files
     images = [img for img in os.listdir(folder_path) if img.endswith(".png")]
-
-    # Sort images by filename
     images.sort(key=lambda x: int(x.split('_')[-1].split('.')[0]))
 
-    # Read the first image to determine the video size
     first_image = cv2.imread(os.path.join(folder_path, images[0]))
     height, width, layers = first_image.shape
 
-    # Define video writing parameters
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # For .mp4 format
-    video = cv2.VideoWriter(output_path, fourcc, fps, (width, height))  # Frames per second
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    video = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
 
-    # Add images to the video
     for image in images:
         img_path = os.path.join(folder_path, image)
         img = cv2.imread(img_path)
         video.write(img)
 
-    # Release resources
     video.release()
     cv2.destroyAllWindows()
 
     print(f"Video successfully created and saved to: {output_path}")
 
 
+if "__name__" == "__main__":
+    input_folder_path = "D:/Study/Master/5_1_course/ML_Week/Friday/notebooks/data/video/"
+    video_path = input_folder_path + "original_video.mp4"
+    output_folder_path = "D:/Study/Master/5_1_course/ML_Week/Friday/notebooks/data/video/"
+    n = 791  # Number of frames to extract
 
-
-
-
-# Usage example:
-input_folder_path = "D:/Study/Master/5_1_course/ML_Week/Friday/notebooks/data/video/"
-video_path = input_folder_path + "original_video.mp4"  # Path to video file
-output_folder_path = "D:/Study/Master/5_1_course/ML_Week/Friday/notebooks/data/video/"  # Folder to save frames
-n = 791  # Number of frames to extract
-
-#save_frames(video_path, n, output_folder_path)
-#landmarks_on_original_frames(input_folder_path, output_folder_path)
-#save_results(input_folder_path, input_folder_path + "results/", n)
-create_video_from_images(input_folder_path + "results/", input_folder_path + "results/result_video.mp4")
+    #save_frames(video_path, n, output_folder_path)
+    #landmarks_on_original_frames(input_folder_path, output_folder_path)
+    #save_results(input_folder_path, input_folder_path + "results/", n)
+    create_video_from_images(input_folder_path + "results/", input_folder_path + "results/result_video.mp4")
