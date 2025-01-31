@@ -64,11 +64,47 @@ def render_ring_on_image(ring_model_path, transformation_matrix, rgb_path, camer
     cv2.destroyAllWindows()
 
 
+def save_render_ring_on_image(ring_model_path, transformation_matrix, rgb_path, camera_intrinsics, depth_map, output_path):
+    """ Renders a ring onto an image and saves the result to a file. """
+    img = cv2.imread(rgb_path)
+    if img is None:
+        raise FileNotFoundError(f"Error: Could not load image at {rgb_path}")
+
+    ring = o3d.io.read_triangle_mesh(ring_model_path)
+    ring.scale(1, center=ring.get_center())
+    ring.rotate(o3d.geometry.get_rotation_matrix_from_axis_angle([np.pi / 2, 0, 0]), center=ring.get_center())
+    ring.transform(transformation_matrix)
+
+    vertices = np.asarray(ring.vertices)
+    triangles = np.asarray(ring.triangles)
+
+    overlay = np.zeros_like(img, dtype=np.uint8)
+    depth_offset = compute_depth_offset(vertices, camera_intrinsics, depth_map)
+
+    for tri in triangles:
+        pts_2d = []
+        for idx in tri:
+            point_3d = vertices[idx]
+            x_2d, y_2d = project_3d_to_2d(point_3d, camera_intrinsics)
+
+            if 0 <= x_2d < img.shape[1] and 0 <= y_2d < img.shape[0]:
+                if point_3d[2] > depth_map[y_2d, x_2d] + depth_offset:
+                    pts_2d = []
+                    break
+                pts_2d.append((x_2d, y_2d))
+
+        if len(pts_2d) == 3:
+            cv2.fillConvexPoly(overlay, np.array(pts_2d, dtype=np.int32), (0, 255, 255))
+
+    blended = cv2.addWeighted(img, 1.0, overlay, 1, 0)
+    cv2.imwrite(output_path, blended)
+
+
 if __name__ == "__main__":
-    rgb_path = "/Users/denys.koval/University/VirtualRingTryOn/data/images/original_1.png"
-    depth_log_path = "/Users/denys.koval/University/VirtualRingTryOn/data/images/depth_logs_1.txt"
-    landmarks_path = "/Users/denys.koval/University/VirtualRingTryOn/data/results/original_1_landmarks.json"
-    ring_model_path = "/Users/denys.koval/University/VirtualRingTryOn/data/models/ring/ring.glb"
+    rgb_path = "D:/Study/Master/5_1_course/ML_Week/Friday/notebooks/data/images/original_0.png"
+    depth_log_path = "D:/Study/Master/5_1_course/ML_Week/Friday/notebooks//data/images/depth_logs_0.txt"
+    landmarks_path = "D:/Study/Master/5_1_course/ML_Week/Friday/notebooks/data/results/original_0_landmarks.json"
+    ring_model_path = "D:/Study/Master/5_1_course/ML_Week/Friday/notebooks/data/models/ring/ring.glb"
 
     intrinsics = np.array([[1464, 0, 960],
                            [0, 1464, 720],
@@ -79,3 +115,4 @@ if __name__ == "__main__":
     matrix = get_transformation_matrix(rgb_path, depth_log_path, landmarks_path, intrinsics)
     if matrix is not None:
         render_ring_on_image(ring_model_path, matrix, rgb_path, intrinsics, depth_map)
+        save_render_ring_on_image(ring_model_path, matrix, rgb_path, intrinsics, depth_map, r"D:\Study\Master\5_1_course\ML_Week\Friday\notebooks\data\video\results\res.png")
