@@ -6,7 +6,12 @@ from pose_estimation import get_transformation_matrix, load_depth_from_log
 
 def project_3d_to_2d(point_3d, camera_intrinsics):
     """Projects a 3D point onto a 2D image using intrinsic parameters."""
-    fx, fy, cx, cy = camera_intrinsics[0, 0], camera_intrinsics[1, 1], camera_intrinsics[0, 2], camera_intrinsics[1, 2]
+    fx, fy, cx, cy = (
+        camera_intrinsics[0, 0],
+        camera_intrinsics[1, 1],
+        camera_intrinsics[0, 2],
+        camera_intrinsics[1, 2],
+    )
     x, y, z = point_3d
     x_2d = int((x * fx / z) + cx)
     y_2d = int((y * fy / z) + cy)
@@ -30,7 +35,9 @@ def compute_depth_offset(vertices, camera_intrinsics, depth_map):
     return 0
 
 
-def render_ring_on_image(ring_model_path, transformation_matrix, rgb_path, camera_intrinsics, depth_map):
+def render_ring_on_image(
+    ring_model_path, transformation_matrix, rgb_path, camera_intrinsics, depth_map
+):
     img = cv2.imread(rgb_path)
     ring = o3d.io.read_triangle_mesh(ring_model_path)
     ring.scale(1, center=ring.get_center())
@@ -63,15 +70,25 @@ def render_ring_on_image(ring_model_path, transformation_matrix, rgb_path, camer
     cv2.destroyAllWindows()
 
 
-def save_render_ring_on_image(ring_model_path, transformation_matrix, rgb_path, camera_intrinsics, depth_map, output_path):
-    """ Renders a ring onto an image and saves the result to a file. """
+def save_render_ring_on_image(
+    ring_model_path,
+    transformation_matrix,
+    rgb_path,
+    camera_intrinsics,
+    depth_map,
+    output_path,
+):
+    """Renders a ring onto an image and saves the result to a file."""
     img = cv2.imread(rgb_path)
     if img is None:
         raise FileNotFoundError(f"Error: Could not load image at {rgb_path}")
 
     ring = o3d.io.read_triangle_mesh(ring_model_path)
     ring.scale(1, center=ring.get_center())
-    ring.rotate(o3d.geometry.get_rotation_matrix_from_axis_angle([np.pi / 2, 0, 0]), center=ring.get_center())
+    ring.rotate(
+        o3d.geometry.get_rotation_matrix_from_axis_angle([np.pi / 2, 0, 0]),
+        center=ring.get_center(),
+    )
     ring.transform(transformation_matrix)
 
     vertices = np.asarray(ring.vertices)
@@ -100,18 +117,29 @@ def save_render_ring_on_image(ring_model_path, transformation_matrix, rgb_path, 
 
 
 if __name__ == "__main__":
-    rgb_path = "D:/Study/Master/5_1_course/ML_Week/Friday/notebooks/data/images/original_0.png"
+    rgb_path = (
+        "D:/Study/Master/5_1_course/ML_Week/Friday/notebooks/data/images/original_0.png"
+    )
     depth_log_path = "D:/Study/Master/5_1_course/ML_Week/Friday/notebooks//data/images/depth_logs_0.txt"
     landmarks_path = "D:/Study/Master/5_1_course/ML_Week/Friday/notebooks/data/results/original_0_landmarks.json"
-    ring_model_path = "D:/Study/Master/5_1_course/ML_Week/Friday/notebooks/data/models/ring/ring.glb"
+    ring_model_path = (
+        "D:/Study/Master/5_1_course/ML_Week/Friday/notebooks/data/models/ring/ring.glb"
+    )
 
-    intrinsics = np.array([[1464, 0, 960],
-                           [0, 1464, 720],
-                           [0, 0, 1]], dtype=np.float32)
+    intrinsics = np.array([[1464, 0, 960], [0, 1464, 720], [0, 0, 1]], dtype=np.float32)
 
     image = cv2.imread(rgb_path)
     depth_map = load_depth_from_log(depth_log_path, (image.shape[0], image.shape[1]))
-    matrix = get_transformation_matrix(rgb_path, depth_log_path, landmarks_path, intrinsics)
+    matrix = get_transformation_matrix(
+        rgb_path, depth_log_path, landmarks_path, intrinsics
+    )
     if matrix is not None:
         render_ring_on_image(ring_model_path, matrix, rgb_path, intrinsics, depth_map)
-        save_render_ring_on_image(ring_model_path, matrix, rgb_path, intrinsics, depth_map, r"D:\Study\Master\5_1_course\ML_Week\Friday\notebooks\data\video\results\res.png")
+        save_render_ring_on_image(
+            ring_model_path,
+            matrix,
+            rgb_path,
+            intrinsics,
+            depth_map,
+            r"D:\Study\Master\5_1_course\ML_Week\Friday\notebooks\data\video\results\res.png",
+        )
