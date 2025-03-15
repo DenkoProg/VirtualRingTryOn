@@ -16,8 +16,8 @@ A **virtual ring try-on** system that detects hand landmarks, estimates 3D trans
 ### **1️⃣ Clone the Repository**
 First, clone the repository from GitHub and navigate into the project directory:
 ```bash
-git clone https://github.com/DanyTaran/Friday.git
-cd Friday
+git clone https://github.com/DenkoProg/VirtualRingTryOn.git
+cd VirtualRingTryOn
 ```
 
 ### **2️⃣ Create a Virtual Environment**
@@ -43,12 +43,12 @@ pip install -r requirements.txt
 ---
 
 ## **🎨 Render Ring Using CLI**
-The **Friday** project allows you to overlay a 3D ring on an image using a **command-line interface (CLI)**.
+The **VirtualRingTryOn** project allows you to overlay a 3D ring on an image using a **command-line interface (CLI)**.
 
 ### **🖼️ Render a Ring on an Image**
 Run the following command to overlay a 3D ring on an image:
 ```bash
-python main.py render-ring-on-image \
+python src/cli.py render-ring-on-image \
     --images-folder "data/images" \
     --landmarks-folder "data/results" \
     --rgb-path "data/images/original_1.png" \
