@@ -99,15 +99,3 @@ def create_video_from_images(folder_path, output_path, fps=30.0):
     cv2.destroyAllWindows()
 
     print(f"Video successfully created and saved to: {output_path}")
-
-
-if "__name__" == "__main__":
-    input_folder_path = "D:/Study/Master/5_1_course/ML_Week/Friday/notebooks/data/video/"
-    video_path = input_folder_path + "original_video.mp4"
-    output_folder_path = "D:/Study/Master/5_1_course/ML_Week/Friday/notebooks/data/video/"
-    n = 791  # Number of frames to extract
-
-    #save_frames(video_path, n, output_folder_path)
-    #landmarks_on_original_frames(input_folder_path, output_folder_path)
-    #save_results(input_folder_path, input_folder_path + "results/", n)
-    create_video_from_images(input_folder_path + "results/", input_folder_path + "results/result_video.mp4")

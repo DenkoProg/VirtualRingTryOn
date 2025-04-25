@@ -114,32 +114,3 @@ def save_render_ring_on_image(
 
     blended = cv2.addWeighted(img, 1.0, overlay, 1, 0)
     cv2.imwrite(output_path, blended)
-
-
-if __name__ == "__main__":
-    rgb_path = (
-        "D:/Study/Master/5_1_course/ML_Week/Friday/notebooks/data/images/original_0.png"
-    )
-    depth_log_path = "D:/Study/Master/5_1_course/ML_Week/Friday/notebooks//data/images/depth_logs_0.txt"
-    landmarks_path = "D:/Study/Master/5_1_course/ML_Week/Friday/notebooks/data/results/original_0_landmarks.json"
-    ring_model_path = (
-        "D:/Study/Master/5_1_course/ML_Week/Friday/notebooks/data/models/ring/ring.glb"
-    )
-
-    intrinsics = np.array([[1464, 0, 960], [0, 1464, 720], [0, 0, 1]], dtype=np.float32)
-
-    image = cv2.imread(rgb_path)
-    depth_map = load_depth_from_log(depth_log_path, (image.shape[0], image.shape[1]))
-    matrix = get_transformation_matrix(
-        rgb_path, depth_log_path, landmarks_path, intrinsics
-    )
-    if matrix is not None:
-        render_ring_on_image(ring_model_path, matrix, rgb_path, intrinsics, depth_map)
-        save_render_ring_on_image(
-            ring_model_path,
-            matrix,
-            rgb_path,
-            intrinsics,
-            depth_map,
-            r"D:\Study\Master\5_1_course\ML_Week\Friday\notebooks\data\video\results\res.png",
-        )
