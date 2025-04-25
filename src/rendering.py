@@ -36,59 +36,30 @@ def compute_depth_offset(vertices, camera_intrinsics, depth_map):
 
 
 def render_ring_on_image(
-    ring_model_path, transformation_matrix, rgb_path, camera_intrinsics, depth_map
-):
-    img = cv2.imread(rgb_path)
-    ring = o3d.io.read_triangle_mesh(ring_model_path)
-    ring.scale(1, center=ring.get_center())
-    ring.transform(transformation_matrix)
-
-    vertices = np.asarray(ring.vertices)
-    triangles = np.asarray(ring.triangles)
-
-    overlay = np.zeros_like(img, dtype=np.uint8)
-    depth_offset = compute_depth_offset(vertices, camera_intrinsics, depth_map)
-
-    for tri in triangles:
-        pts_2d = []
-        for idx in tri:
-            point_3d = vertices[idx]
-            x_2d, y_2d = project_3d_to_2d(point_3d, camera_intrinsics)
-
-            if point_3d[2] > depth_map[y_2d, x_2d] + depth_offset:
-                pts_2d = []
-                break
-
-            pts_2d.append((x_2d, y_2d))
-
-        if len(pts_2d) == 3:
-            cv2.fillConvexPoly(overlay, np.array(pts_2d, dtype=np.int32), (0, 255, 255))
-
-    blended = cv2.addWeighted(img, 1.0, overlay, 1, 0)
-    cv2.imshow("Rendered Ring", blended)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-
-def save_render_ring_on_image(
     ring_model_path,
     transformation_matrix,
     rgb_path,
     camera_intrinsics,
     depth_map,
-    output_path,
+    output_path=None
 ):
-    """Renders a ring onto an image and saves the result to a file."""
+    """
+    Renders a ring onto an image and either displays it or saves to a file.
+
+    Args:
+        ring_model_path: Path to the ring model file
+        transformation_matrix: 4x4 transformation matrix
+        rgb_path: Path to the input RGB image
+        camera_intrinsics: Camera intrinsic parameters
+        depth_map: Depth map of the scene
+        output_path: Optional path to save the result. If None, displays the result.
+    """
     img = cv2.imread(rgb_path)
     if img is None:
         raise FileNotFoundError(f"Error: Could not load image at {rgb_path}")
 
     ring = o3d.io.read_triangle_mesh(ring_model_path)
     ring.scale(1, center=ring.get_center())
-    ring.rotate(
-        o3d.geometry.get_rotation_matrix_from_axis_angle([np.pi / 2, 0, 0]),
-        center=ring.get_center(),
-    )
     ring.transform(transformation_matrix)
 
     vertices = np.asarray(ring.vertices)
@@ -113,4 +84,12 @@ def save_render_ring_on_image(
             cv2.fillConvexPoly(overlay, np.array(pts_2d, dtype=np.int32), (0, 255, 255))
 
     blended = cv2.addWeighted(img, 1.0, overlay, 1, 0)
-    cv2.imwrite(output_path, blended)
+
+    if output_path:
+        cv2.imwrite(output_path, blended)
+    else:
+        cv2.imshow("Rendered Ring", blended)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+    return blended
