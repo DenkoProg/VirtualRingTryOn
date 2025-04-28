@@ -2,7 +2,7 @@ import typer
 import cv2
 import numpy as np
 from hand_localization import process_image
-from pose_estimation import get_transformation_matrix, load_depth_from_log
+from pose_estimation import get_transformation_matrix, load_depth
 from rendering import render_ring_on_image
 from video_processing import (
     save_frames,
@@ -24,7 +24,7 @@ def get_intrinsics():
 @app.command(name="render-ring-on-image")
 def render_ring_on_image_command(
     rgb_path: str = typer.Option(..., help="Path to the RGB image."),
-    depth_log_path: str = typer.Option(..., help="Path to the depth log file."),
+    depth_path: str = typer.Option(..., help="Path to the depth data (either image or log file)."),
     ring_model_path: str = typer.Option(..., help="Path to the ring model file."),
     output_dir: str = typer.Option(..., help="Directory to save the output image.")
 ):
@@ -37,12 +37,12 @@ def render_ring_on_image_command(
         process_image(rgb_path, str(output_dir_path))
 
         image = cv2.imread(rgb_path)
-        depth_map = load_depth_from_log(depth_log_path, (image.shape[0], image.shape[1]))
+        depth_map = load_depth(depth_path, (image.shape[0], image.shape[1]))
 
         intrinsics = get_intrinsics()
         matrix = get_transformation_matrix(
             rgb_path,
-            depth_log_path,
+            depth_path,
             str(landmarks_path),
             intrinsics
         )

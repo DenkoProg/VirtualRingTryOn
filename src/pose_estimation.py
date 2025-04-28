@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import open3d as o3d
 import json
+from pathlib import Path
 
 
 def load_depth_from_log(log_path, target_size):
@@ -19,13 +20,44 @@ def load_depth_from_log(log_path, target_size):
     return depth_matrix * 1000.0  # Convert mm to meters
 
 
-def load_rgbd_data(rgb_path, depth_log_path, landmarks_path):
+def load_depth_from_image(image_path, target_size):
+    """Reads a depth image and converts it into a NumPy array."""
+    depth_image = cv2.imread(image_path, cv2.IMREAD_ANYDEPTH)
+    if depth_image is None:
+        raise FileNotFoundError(f"Error: Could not load depth image at {image_path}")
+
+    depth_matrix = cv2.resize(
+        depth_image, target_size, interpolation=cv2.INTER_NEAREST
+    )
+
+    return depth_matrix.astype(np.float32)
+
+
+def load_depth(depth_path, target_size):
+    """
+    Load depth data from either a log file or an image.
+
+    Args:
+        depth_path: Path to either a depth log file or depth image
+        target_size: Target size for the depth map (width, height)
+
+    Returns:
+        numpy.ndarray: Depth map in meters
+    """
+    depth_path = Path(depth_path)
+    if depth_path.suffix == '.txt':
+        return load_depth_from_log(str(depth_path), target_size)
+    else:
+        return load_depth_from_image(str(depth_path), target_size)
+
+
+def load_rgbd_data(rgb_path, depth_path, landmarks_path):
     rgb_image = cv2.imread(rgb_path)
     if rgb_image is None:
         raise FileNotFoundError(f"Error: Could not load RGB image at {rgb_path}")
 
     original_height, original_width, _ = rgb_image.shape
-    depth_map = load_depth_from_log(depth_log_path, (original_width, original_height))
+    depth_map = load_depth(depth_path, (original_width, original_height))
 
     with open(landmarks_path, "r") as f:
         hand_landmarks = json.load(f)
@@ -91,10 +123,10 @@ def compute_ring_transformation(hand_3d_points):
 
 
 def get_transformation_matrix(
-    rgb_path, depth_log_path, landmarks_path, camera_intrinsics
+    rgb_path, depth_path, landmarks_path, camera_intrinsics
 ):
     rgb_image, depth_map, hand_landmarks = load_rgbd_data(
-        rgb_path, depth_log_path, landmarks_path
+        rgb_path, depth_path, landmarks_path
     )
     hand_3d_points = convert_landmarks_to_3d(
         hand_landmarks, depth_map, camera_intrinsics

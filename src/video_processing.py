@@ -2,7 +2,7 @@ import cv2
 import os
 import numpy as np
 from pose_estimation import load_depth_from_log, get_transformation_matrix
-from rendering import save_render_ring_on_image
+from rendering import render_ring_on_image
 from hand_localization import process_image
 
 def save_frames(video_path, n, output_folder_path):
@@ -73,7 +73,7 @@ def save_results(input_folder_path, output_path, n):
                 depth_map = load_depth_from_log(depth_log_path, (image.shape[0], image.shape[1]))
                 matrix = get_transformation_matrix(rgb_path, depth_log_path, landmarks_path, intrinsics)
                 if matrix is not None:
-                    save_render_ring_on_image(ring_model_path, matrix, rgb_path, intrinsics, depth_map, output_path + f"result_frame_{i}.png")
+                    render_ring_on_image(ring_model_path, matrix, rgb_path, intrinsics, depth_map, output_path + f"result_frame_{i}.png")
                     print(f"Render {i}")
         except Exception as e:
             print(f"Error processing frame {i}: {e}")
