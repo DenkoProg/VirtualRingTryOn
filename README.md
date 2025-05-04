@@ -1,4 +1,4 @@
-# **Friday - Virtual Ring Try-On**
+# **Virtual Ring Try-On**
 A **virtual ring try-on** system that detects hand landmarks, estimates 3D transformations, and overlays a 3D ring model on images and videos. This project utilizes **OpenCV, Open3D, Mediapipe, and Typer** for processing.
 
 ---
@@ -49,9 +49,9 @@ The **VirtualRingTryOn** project allows you to overlay a 3D ring on an image usi
 Run the following command to overlay a 3D ring on an image:
 ```bash
 python src/cli.py render-ring-on-image \
-    --images-folder "data/images" \
-    --landmarks-folder "data/results" \
-    --rgb-path "data/images/original_1.png" \
-    --depth-log-path "data/depth_logs/depth_logs_1.txt" \
-    --ring-model-path "data/models/ring.glb"
+    --rgb-path path/to/your/photo.jpg \
+    --depth-path path/to/depth-map.png \
+    --ring-model-path data/models/ring/ring.glb \
+    --output-dir output/results
+```
 
