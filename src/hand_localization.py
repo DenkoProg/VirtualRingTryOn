@@ -37,7 +37,7 @@ def process_image(image_path, output_dir):
 
             image_filename = os.path.basename(image_path)
             annotated_image_path = os.path.join(
-                output_dir, f"annotated_{image_filename}"
+                output_dir, f"{image_filename.split('.')[0]}_annotated.jpg"
             )
             cv2.imwrite(annotated_image_path, annotated_image)
 
