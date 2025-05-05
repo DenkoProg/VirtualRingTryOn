@@ -18,7 +18,7 @@ app = typer.Typer()
 
 def get_intrinsics():
     """Get camera intrinsics matrix."""
-    return np.array([[764, 0, 960], [0, 664, 720], [0, 0, 1]], dtype=np.float32)
+    return np.array([[800, 0, 600], [0, 1000, 720], [0, 0, 1]], dtype=np.float32)
 
 
 @app.command(name="render-ring-on-image")
